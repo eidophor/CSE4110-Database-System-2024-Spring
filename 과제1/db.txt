@@ -1,0 +1,134 @@
+CREATE TABLE Agent (
+    agent_id INTEGER PRIMARY KEY,
+    Name TEXT,
+    Contact_Info TEXT
+);
+
+CREATE TABLE Buyer (
+    buyer_id INTEGER PRIMARY KEY,
+    Name TEXT,
+    Contact_Info TEXT
+);
+
+CREATE TABLE Seller (
+    seller_id INTEGER PRIMARY KEY,
+    Name TEXT,
+    Contact_Info TEXT
+);
+
+CREATE TABLE Property (
+    property_id INTEGER PRIMARY KEY,
+    listing_date DATE PRIMARY KEY,
+    address TEXT,
+    price INTEGER,
+    size INTEGER,
+    property_type TEXT,
+    Number_of_Bedrooms INTEGER,
+    Number_of_Bathrooms INTEGER,
+    School_District INTEGER,
+);
+
+CREATE TABLE Photo (
+    photo_id INTEGER PRIMARY KEY,
+    Property_ID INTEGER,
+    Type TEXT,
+    Image_URL TEXT,
+    FOREIGN KEY (Property_ID) REFERENCES Property(ID)
+);
+
+CREATE TABLE Sold (
+    ID INTEGER PRIMARY KEY,
+    Buyer_ID INTEGER,
+    Seller_ID INTEGER,
+    Agent_ID INTEGER,
+    Property_ID INTEGER,
+    Sale_Date DATE,
+    FOREIGN KEY (Buyer_ID) REFERENCES Buyer(ID),
+    FOREIGN KEY (Seller_ID) REFERENCES Seller(ID),
+    FOREIGN KEY (Agent_ID) REFERENCES Agent(ID),
+    FOREIGN KEY (Property_ID) REFERENCES Property(ID)
+);
+
+
+a) 판매된 부동산 중에서 Mapo 구에 위치하고 가격이 10억원에서 15억원 사이인 주택 주소 찾기
+
+sql
+
+SELECT Address
+FROM Property
+INNER JOIN Sold ON Property.ID = Sold.Property_ID
+WHERE Address LIKE '%Mapo%' AND Price BETWEEN 1000000000 AND 1500000000;
+
+
+b) 8번 학군에 위치한 4개 이상의 침실과 2개 이상의 욕실을 갖춘 판매된 주택 주소 찾기
+sql
+
+SELECT Address
+FROM Property
+INNER JOIN Sold ON Property.ID = Sold.Property_ID
+WHERE School_District = 8 AND Number_of_Bedrooms >= 4 AND Number_of_Bathrooms >= 2;
+
+c) 2022년에 가장 많은 매물을 판매한 중개인의 이름 찾기
+sql
+
+SELECT Agent.Name
+FROM Agent
+INNER JOIN Sold ON Agent.Agent_ID = Sold.Agent_ID
+INNER JOIN Property ON Sold.Property_ID = Property.Property_ID
+WHERE strftime('%Y', Sold.Sale_Date) = '2022'
+GROUP BY Sold.Agent_ID
+ORDER BY SUM(Property.Price) DESC
+LIMIT 1;
+
+
+d) 각 중개인별로 2022년에 판매한 부동산의 평균 판매 가격과 평균 판매 기간 찾기
+sql
+
+SELECT Agent.Name,
+       AVG(Property.Price) AS Average_Selling_Price,
+       AVG(julianday(Sold.Sale_Date) - julianday(Property.Listing_Date)) AS Average_Time_On_Market
+FROM Agent
+INNER JOIN Sold ON Agent.ID = Sold.Agent_ID
+INNER JOIN Property ON Sold.Property_ID = Property.ID
+WHERE strftime('%Y', Sold.Sale_Date) = '2022'
+GROUP BY Agent.ID;
+
+
+e) 데이터베이스에 저장된 가장 비싼 스튜디오, 1베드룸, 다베드룸 아파트, 독채 주택의 사진 표시
+sql
+
+SELECT Photo.Image_URL
+FROM Photo
+INNER JOIN Property ON Photo.Property_ID = Property.ID
+INNER JOIN Sold ON Property.ID = Sold.Property_ID
+WHERE Property.Type = 'Studio' OR Property.Type = 'One-Bedroom' OR Property.Type = 'Multi-Bedroom' OR Property.Type = 'Detached House'
+ORDER BY Property.Price DESC
+LIMIT 1;
+
+f) 판매된 부동산의 거래 기록 기록하기
+
+sql
+
+INSERT INTO Sold (Buyer_ID, Seller_ID, Agent_ID, Property_ID, Sale_Date, Sale_Price)
+VALUES (해당 내용 작성);
+
+g) 새로운 중개인 추가하기
+
+sql
+
+INSERT INTO Agent (ID, Name, Contact_Info)
+VALUES (해당 내용 작성);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
